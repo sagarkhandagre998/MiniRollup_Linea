@@ -1,0 +1,26 @@
+plugins {
+  id "java"
+}
+
+group = "com.lfx.miniroollup"
+version = "0.1.0"
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compileOnly "org.hyperledger.besu:plugin-api:24.12.1"
+  compileOnly "org.slf4j:slf4j-api:2.0.13"
+  compileOnly "info.picocli:picocli:4.7.6"
+}
+
+tasks.withType(JavaCompile).configureEach {
+  options.encoding = "UTF-8"
+}
