@@ -21,6 +21,7 @@ import org.hyperledger.besu.plugin.services.metrics.MetricCategoryRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Option;
+import com.lfx.miniroollup.options.PluginOptions;
 
 public final class MiniRollupPlugin implements BesuPlugin {
   private static final Logger LOG = LoggerFactory.getLogger(MiniRollupPlugin.class);
@@ -139,20 +140,6 @@ public final class MiniRollupPlugin implements BesuPlugin {
     rpc.registerRPCEndpoint("miniroollup", "policy", req -> rollupRpc.policy());
     rpc.registerRPCEndpoint("miniroollup", "markHardFinalized", rollupRpc::markHardFinalized);
     LOG.info("MiniRollupPlugin RPC endpoints registered");
-  }
-
-  public static final class PluginOptions {
-    @Option(names = "--plugin-miniroollup-enabled", defaultValue = "true")
-    boolean enabled;
-
-    @Option(names = "--plugin-miniroollup-max-calldata-bytes", defaultValue = "2048")
-    int maxCalldataBytes;
-
-    @Option(names = "--plugin-miniroollup-max-gas-limit", defaultValue = "10000000")
-    long maxGasLimit;
-
-    @Option(names = "--plugin-miniroollup-max-block-txs", defaultValue = "100")
-    long maxBlockTxs;
   }
 
   private enum MiniMetricCategory implements MetricCategory {
