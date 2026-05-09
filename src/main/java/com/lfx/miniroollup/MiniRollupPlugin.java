@@ -55,6 +55,9 @@ public final class MiniRollupPlugin implements BesuPlugin {
         .getService(MetricCategoryRegistry.class)
         .orElseThrow(() -> new IllegalStateException("MetricCategoryRegistry unavailable"))
         .addMetricCategory(MiniMetricCategory.MINIROLLUP);
+    // Must register RPC here so the "miniroollup" namespace is known before Besu validates
+    // --rpc-http-api
+    context.getService(RpcEndpointService.class).ifPresent(this::registerRpcEndpoints);
     LOG.info("MiniRollupPlugin register() complete");
   }
 
@@ -74,11 +77,6 @@ public final class MiniRollupPlugin implements BesuPlugin {
         .getService(TransactionSelectionService.class)
         .orElseThrow(() -> new IllegalStateException("TransactionSelectionService unavailable"));
     context.getService(TransactionSelectionService.class).ifPresent(this::registerSelector);
-
-    context
-        .getService(RpcEndpointService.class)
-        .orElseThrow(() -> new IllegalStateException("RpcEndpointService unavailable"));
-    context.getService(RpcEndpointService.class).ifPresent(this::registerRpcEndpoints);
 
     LOG.info("MiniRollupPlugin beforeExternalServices() with policy {}", policy);
   }
