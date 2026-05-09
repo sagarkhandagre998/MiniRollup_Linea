@@ -1,15 +1,15 @@
 package com.lfx.miniroollup.validation;
 
 import com.lfx.miniroollup.config.RollupPolicy;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
+
 import org.hyperledger.besu.datatypes.Transaction;
 
-/**
- * Minimal L2-inspired transaction pre-checks.
- * This class is purposely small and deterministic for demo-functionality clarity.
- */
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
+
+/** Validates transactions against the active rollup policy before pool admission. */
 public final class TxValidator {
+
   private final AtomicLong accepted = new AtomicLong();
   private final AtomicLong rejected = new AtomicLong();
 

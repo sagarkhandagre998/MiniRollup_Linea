@@ -2,11 +2,9 @@ package com.lfx.miniroollup.finalization;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Tracks "soft" (L2 head seen locally) and "hard" (externally anchored) finalization views.
- * For this minimal plugin, hard finality is updated via RPC simulation.
- */
+/** Tracks soft (latest observed block) and hard (externally confirmed) finalization heights. */
 public final class FinalizationTracker {
+
   private final AtomicLong latestSoftFinalizedBlock = new AtomicLong(-1L);
   private final AtomicLong latestHardFinalizedBlock = new AtomicLong(-1L);
 

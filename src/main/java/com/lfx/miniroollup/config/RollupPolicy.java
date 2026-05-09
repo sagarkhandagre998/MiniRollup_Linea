@@ -2,11 +2,9 @@ package com.lfx.miniroollup.config;
 
 import java.util.Objects;
 
-/**
- * Central policy object used by validation and selection modules.
- * Keeps the demo plugin configurable
- */
+/** Immutable rollup policy applied by both transaction validation and block selection. */
 public final class RollupPolicy {
+
   private final boolean enabled;
   private final int maxCalldataBytes;
   private final long maxGasLimit;
@@ -49,12 +47,16 @@ public final class RollupPolicy {
 
   @Override
   public String toString() {
-    return "RollupPolicy{"
-        + "enabled=" + enabled
-        + ", maxCalldataBytes=" + maxCalldataBytes
-        + ", maxGasLimit=" + maxGasLimit
-        + ", maxBlockTxs=" + maxBlockTxs
-        + '}';
+    return ("RollupPolicy{"
+        + "enabled="
+        + enabled
+        + ", maxCalldataBytes="
+        + maxCalldataBytes
+        + ", maxGasLimit="
+        + maxGasLimit
+        + ", maxBlockTxs="
+        + maxBlockTxs
+        + '}');
   }
 
   @Override
@@ -70,9 +72,9 @@ public final class RollupPolicy {
     if (!(other instanceof RollupPolicy that)) {
       return false;
     }
-    return enabled == that.enabled
+    return (enabled == that.enabled
         && maxCalldataBytes == that.maxCalldataBytes
         && maxGasLimit == that.maxGasLimit
-        && maxBlockTxs == that.maxBlockTxs;
+        && maxBlockTxs == that.maxBlockTxs);
   }
 }

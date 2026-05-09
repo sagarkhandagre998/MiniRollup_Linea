@@ -3,11 +3,12 @@ package com.lfx.miniroollup;
 import com.lfx.miniroollup.config.RollupPolicy;
 import com.lfx.miniroollup.finalization.FinalizationTracker;
 import com.lfx.miniroollup.metrics.MetricsCollector;
+import com.lfx.miniroollup.metrics.MiniMetricCategory;
+import com.lfx.miniroollup.options.PluginOptions;
 import com.lfx.miniroollup.rpc.RollupRpc;
 import com.lfx.miniroollup.selection.TxSelectorFactory;
 import com.lfx.miniroollup.validation.TxValidator;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
+
 import org.hyperledger.besu.plugin.BesuPlugin;
 import org.hyperledger.besu.plugin.ServiceManager;
 import org.hyperledger.besu.plugin.services.BesuEvents;
@@ -16,21 +17,25 @@ import org.hyperledger.besu.plugin.services.PicoCLIOptions;
 import org.hyperledger.besu.plugin.services.RpcEndpointService;
 import org.hyperledger.besu.plugin.services.TransactionSelectionService;
 import org.hyperledger.besu.plugin.services.TransactionValidatorService;
-import org.hyperledger.besu.plugin.services.metrics.MetricCategory;
 import org.hyperledger.besu.plugin.services.metrics.MetricCategoryRegistry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import picocli.CommandLine.Option;
-import com.lfx.miniroollup.options.PluginOptions;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+
+/** Besu plugin that enforces L2 rollup sequencer policy on transaction validation and selection. */
 public final class MiniRollupPlugin implements BesuPlugin {
+
   private static final Logger LOG = LoggerFactory.getLogger(MiniRollupPlugin.class);
 
   private ServiceManager context;
   private Long blockAddedListenerId;
 
   private final PluginOptions options = new PluginOptions();
-  private final AtomicReference<RollupPolicy> policyRef = new AtomicReference<>(RollupPolicy.defaults());
+  private final AtomicReference<RollupPolicy> policyRef =
+      new AtomicReference<>(RollupPolicy.defaults());
 
   private final TxValidator txValidator = new TxValidator();
   private final TxSelectorFactory txSelectorFactory = new TxSelectorFactory(policyRef);
@@ -42,10 +47,14 @@ public final class MiniRollupPlugin implements BesuPlugin {
   @Override
   public void register(final ServiceManager context) {
     this.context = context;
-    context.getService(PicoCLIOptions.class).ifPresent(cli -> cli.addPicoCLIOptions("miniroollup", options));
+    context
+        .getService(PicoCLIOptions.class)
+        .orElseThrow(() -> new IllegalStateException("PicoCLIOptions not available"))
+        .addPicoCLIOptions("miniroollup", options);
     context
         .getService(MetricCategoryRegistry.class)
-        .ifPresent(registry -> registry.addMetricCategory(MiniMetricCategory.MINIROLLUP));
+        .orElseThrow(() -> new IllegalStateException("MetricCategoryRegistry unavailable"))
+        .addMetricCategory(MiniMetricCategory.MINIROLLUP);
     LOG.info("MiniRollupPlugin register() complete");
   }
 
@@ -53,14 +62,22 @@ public final class MiniRollupPlugin implements BesuPlugin {
   public void beforeExternalServices() {
     final RollupPolicy policy =
         new RollupPolicy(
-            options.enabled,
-            options.maxCalldataBytes,
-            options.maxGasLimit,
-            options.maxBlockTxs);
+            options.enabled, options.maxCalldataBytes, options.maxGasLimit, options.maxBlockTxs);
     policyRef.set(policy);
 
+    context
+        .getService(TransactionValidatorService.class)
+        .orElseThrow(() -> new IllegalStateException("TransactionValidatorService unavailable"));
     context.getService(TransactionValidatorService.class).ifPresent(this::registerValidator);
+
+    context
+        .getService(TransactionSelectionService.class)
+        .orElseThrow(() -> new IllegalStateException("TransactionSelectionService unavailable"));
     context.getService(TransactionSelectionService.class).ifPresent(this::registerSelector);
+
+    context
+        .getService(RpcEndpointService.class)
+        .orElseThrow(() -> new IllegalStateException("RpcEndpointService unavailable"));
     context.getService(RpcEndpointService.class).ifPresent(this::registerRpcEndpoints);
 
     LOG.info("MiniRollupPlugin beforeExternalServices() with policy {}", policy);
@@ -82,10 +99,7 @@ public final class MiniRollupPlugin implements BesuPlugin {
   public CompletableFuture<Void> reloadConfiguration() {
     final RollupPolicy newPolicy =
         new RollupPolicy(
-            options.enabled,
-            options.maxCalldataBytes,
-            options.maxGasLimit,
-            options.maxBlockTxs);
+            options.enabled, options.maxCalldataBytes, options.maxGasLimit, options.maxBlockTxs);
     policyRef.set(newPolicy);
     LOG.info("MiniRollupPlugin configuration reloaded: {}", newPolicy);
     return CompletableFuture.completedFuture(null);
@@ -140,19 +154,5 @@ public final class MiniRollupPlugin implements BesuPlugin {
     rpc.registerRPCEndpoint("miniroollup", "policy", req -> rollupRpc.policy());
     rpc.registerRPCEndpoint("miniroollup", "markHardFinalized", rollupRpc::markHardFinalized);
     LOG.info("MiniRollupPlugin RPC endpoints registered");
-  }
-
-  private enum MiniMetricCategory implements MetricCategory {
-    MINIROLLUP;
-
-    @Override
-    public String getName() {
-      return "miniroollup";
-    }
-
-    @Override
-    public java.util.Optional<String> getApplicationPrefix() {
-      return java.util.Optional.of("plugin_");
-    }
   }
 }

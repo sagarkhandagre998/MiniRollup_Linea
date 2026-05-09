@@ -1,22 +1,19 @@
 package com.lfx.miniroollup.options;
 
-public static final class PluginOptions {
+import picocli.CommandLine.Option;
 
-    @Option(names = "--plugin-miniroollup-enabled", defaultValue = "true")
-    boolean enabled;
+/** CLI options injected by Besu via PicoCLIOptions during plugin registration. */
+public final class PluginOptions {
 
-    @Option(
-        names = "--plugin-miniroollup-max-calldata-bytes",
-        defaultValue = "2048"
-    )
-    int maxCalldataBytes;
+  @Option(names = "--plugin-miniroollup-enabled", defaultValue = "true")
+  public boolean enabled;
 
-    @Option(
-        names = "--plugin-miniroollup-max-gas-limit",
-        defaultValue = "10000000"
-    )
-    long maxGasLimit;
+  @Option(names = "--plugin-miniroollup-max-calldata-bytes", defaultValue = "2048")
+  public int maxCalldataBytes;
 
-    @Option(names = "--plugin-miniroollup-max-block-txs", defaultValue = "100")
-    long maxBlockTxs;
+  @Option(names = "--plugin-miniroollup-max-gas-limit", defaultValue = "10000000")
+  public long maxGasLimit;
+
+  @Option(names = "--plugin-miniroollup-max-block-txs", defaultValue = "100")
+  public long maxBlockTxs;
 }

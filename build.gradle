@@ -1,5 +1,6 @@
 plugins {
   id "java"
+  id "com.diffplug.spotless" version "7.0.3"
 }
 
 group = "com.lfx.miniroollup"
@@ -7,20 +8,57 @@ version = "0.1.0"
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
+    languageVersion = JavaLanguageVersion.of(21)
   }
 }
 
 repositories {
+  maven {
+    url 'https://hyperledger.jfrog.io/hyperledger/besu-maven'
+  }
   mavenCentral()
 }
 
+// TransactionValidatorService and TransactionValidationRule exist only in the local Besu source
+// tree and are not yet in the published 24.12.1 artifact. Switch back to a published coordinate
+// once the relevant Besu release is available on the CDN.
+def localBesuJars = files(
+    "../besu/plugin-api/build/libs/besu-plugin-api-26.5-develop-343f68b.jar",
+    "../besu/datatypes/build/libs/besu-datatypes-26.5-develop-f48381a.jar"
+)
+
 dependencies {
-  compileOnly "org.hyperledger.besu:plugin-api:24.12.1"
+  compileOnly localBesuJars
+  compileOnly "io.consensys.tuweni:tuweni-bytes:2.7.2"
   compileOnly "org.slf4j:slf4j-api:2.0.13"
   compileOnly "info.picocli:picocli:4.7.6"
+
+  testImplementation localBesuJars
+  testImplementation "io.consensys.tuweni:tuweni-bytes:2.7.2"
+  testImplementation "io.consensys.tuweni:tuweni-units:2.7.2"
+  testImplementation "io.consensys.tuweni:tuweni-rlp:2.7.2"
+  testImplementation "com.google.guava:guava:33.3.1-jre"
+
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+  testImplementation 'org.assertj:assertj-core:3.24.2'
+  testImplementation 'org.mockito:mockito-core:4.11.0'
 }
 
 tasks.withType(JavaCompile).configureEach {
   options.encoding = "UTF-8"
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+spotless {
+  java {
+    target 'src/**/*.java'
+    googleJavaFormat('1.25.2')
+    importOrder 'com.lfx', 'org.hyperledger', 'org', 'java', ''
+    removeUnusedImports()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
 }

@@ -3,8 +3,8 @@ package com.lfx.miniroollup.selection;
 import static org.hyperledger.besu.plugin.data.TransactionSelectionResult.SELECTED;
 
 import com.lfx.miniroollup.config.RollupPolicy;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+
+import org.hyperledger.besu.plugin.data.ProcessableBlockHeader;
 import org.hyperledger.besu.plugin.data.TransactionProcessingResult;
 import org.hyperledger.besu.plugin.data.TransactionSelectionResult;
 import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelector;
@@ -12,10 +12,12 @@ import org.hyperledger.besu.plugin.services.txselection.PluginTransactionSelecto
 import org.hyperledger.besu.plugin.services.txselection.SelectorsStateManager;
 import org.hyperledger.besu.plugin.services.txselection.TransactionEvaluationContext;
 
-/**
- * Minimal "sequencer policy" helper that can be mapped to TransactionSelectionService hooks.
- */
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+/** Applies rollup policy (gas limit, calldata size) during block transaction selection. */
 public final class TxSelectorFactory implements PluginTransactionSelectorFactory {
+
   private final AtomicReference<RollupPolicy> policyRef;
   private final AtomicLong selected = new AtomicLong();
   private final AtomicLong dropped = new AtomicLong();
@@ -25,7 +27,9 @@ public final class TxSelectorFactory implements PluginTransactionSelectorFactory
   }
 
   @Override
-  public PluginTransactionSelector create(final SelectorsStateManager selectorsStateManager) {
+  public PluginTransactionSelector create(
+      final ProcessableBlockHeader pendingBlockHeader,
+      final SelectorsStateManager selectorsStateManager) {
     return new PluginTransactionSelector() {
       @Override
       public TransactionSelectionResult evaluateTransactionPreProcessing(
@@ -39,11 +43,11 @@ public final class TxSelectorFactory implements PluginTransactionSelectorFactory
         final var tx = evaluationContext.getPendingTransaction().getTransaction();
         if (tx.getGasLimit() > policy.maxGasLimit()) {
           dropped.incrementAndGet();
-          return TransactionSelectionResult.invalid("gas limit exceeds mini rollup policy");
+          return TransactionSelectionResult.invalid("gas limit exceeds rollup policy");
         }
         if (tx.getPayload().size() > policy.maxCalldataBytes()) {
           dropped.incrementAndGet();
-          return TransactionSelectionResult.invalid("calldata too large for mini rollup policy");
+          return TransactionSelectionResult.invalid("calldata too large for rollup policy");
         }
 
         selected.incrementAndGet();
@@ -57,23 +61,6 @@ public final class TxSelectorFactory implements PluginTransactionSelectorFactory
         return SELECTED;
       }
     };
-  }
-
-  @Deprecated(forRemoval = true)
-  public boolean shouldSelectLegacy(final long txCountInBlock) {
-    final RollupPolicy policy = policyRef.get();
-    if (!policy.enabled()) {
-      selected.incrementAndGet();
-      return true;
-    }
-
-    if (txCountInBlock >= policy.maxBlockTxs()) {
-      dropped.incrementAndGet();
-      return false;
-    }
-
-    selected.incrementAndGet();
-    return true;
   }
 
   public long selectedCount() {

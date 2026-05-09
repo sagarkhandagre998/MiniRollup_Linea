@@ -1,0 +1,35 @@
+# Build outputs
+build/
+out/
+
+# Gradle cache / daemon state
+.gradle/
+
+# Local Gradle distribution zips (not needed — wrapper downloads from CDN)
+gradle-*-bin.zip
+gradle-*-all.zip
+
+# Unpacked local Gradle install
+gradle-dist/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Compiled class files
+*.class
+
+# Maven (pom.xml kept for reference only)
+target/
+
+# Do NOT ignore wrapper files — they must be committed:
+# gradle/wrapper/gradle-wrapper.jar
+# gradle/wrapper/gradle-wrapper.properties
+# gradlew
+# gradlew.bat
+# gradle.properties

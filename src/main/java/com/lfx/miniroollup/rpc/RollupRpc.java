@@ -2,21 +2,22 @@ package com.lfx.miniroollup.rpc;
 
 import com.lfx.miniroollup.config.RollupPolicy;
 import com.lfx.miniroollup.finalization.FinalizationTracker;
+
+import org.hyperledger.besu.plugin.services.rpc.PluginRpcRequest;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import org.hyperledger.besu.plugin.services.rpc.PluginRpcRequest;
 
-/**
- * RPC payload handlers used by MiniRollupPlugin.
- * Registration to Besu RpcEndpointService is handled in the plugin lifecycle class.
- */
+/** RPC endpoint handlers for plugin status, policy inspection, and finalization control. */
 public final class RollupRpc {
+
   private final AtomicReference<RollupPolicy> policyRef;
   private final FinalizationTracker finalizationTracker;
 
   public RollupRpc(
-      final AtomicReference<RollupPolicy> policyRef, final FinalizationTracker finalizationTracker) {
+      final AtomicReference<RollupPolicy> policyRef,
+      final FinalizationTracker finalizationTracker) {
     this.policyRef = policyRef;
     this.finalizationTracker = finalizationTracker;
   }

@@ -3,14 +3,14 @@ package com.lfx.miniroollup.metrics;
 import com.lfx.miniroollup.finalization.FinalizationTracker;
 import com.lfx.miniroollup.selection.TxSelectorFactory;
 import com.lfx.miniroollup.validation.TxValidator;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-/**
- * Keeps metrics collection independent from Besu-specific metric registration plumbing.
- */
+/** Aggregates plugin gauges from validator, selector, and finalization tracker. */
 public final class MetricsCollector {
+
   private final TxValidator validator;
   private final TxSelectorFactory selector;
   private final FinalizationTracker finalizationTracker;
